@@ -62,6 +62,10 @@ func parseArgs(args []string) (config, error) {
 		c.printUsage = true
 		return c, nil
 	}
+	if args[0] == "-l" {
+		c.printUsage = true
+		return c, nil
+	}
 	numTimes, err = strconv.Atoi(args[0])
 	if err != nil {
 		return c, err

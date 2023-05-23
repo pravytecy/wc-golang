@@ -1,0 +1,2 @@
+This is sample file 
+to test the "wc" command is working or not
