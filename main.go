@@ -5,106 +5,60 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
-type flagOptins struct {
+type flagOptions struct {
 	lines bool
 	words bool
 	chars bool
 }
 
 var (
-	flagSet    flagOptins
+	flagSet    flagOptions
 	linesCount int
 	wordCount  int
+	charCount  int
 )
 
 func main() {
-
-	lines := flag.Bool("l", false, "Number of lines")
-	word := flag.Bool("w", false, "Number of words")
-	flag.Parse()
-	callOptions()
-	otp := printValues(lines, word)
-
-	printToStdout(otp)
-}
-
-// func parseArgs(w io.Writer, args []string) {
-// 	//var c = &flagOptins{false, false, false}
-
-// 	flagSet.lines = flag.Bool("l", false, "Number of lines")
-// 	flag.Bool("w", false, "Number of words")
-// 	//flag.BoolVar(&c.chars, "c", false, "Number of chars")
-// 	flag.Parse()
-
-// }
-
-func callOptions() {
-	countLines("sample.txt")
-	countWords("sample.txt")
-}
-
-func countLines(file string) {
-	filePath, err := os.Open(file)
+	err := rootCmd.Execute()
 	if err != nil {
-		fmt.Println(err)
-	}
-	fileScanner := bufio.NewScanner(filePath)
-	fileScanner.Split(bufio.ScanLines)
-	var fileLines []string
-	for fileScanner.Scan() {
-		fileLines = append(fileLines, fileScanner.Text())
+		printToStderr(err)
 	}
 
-	filePath.Close()
-	for _, line := range fileLines {
-		fmt.Println(line)
-		linesCount++
-	}
-	fmt.Printf("Number of lines : %d", linesCount)
 }
 
-func countWords(file string) {
-	filePath, err := os.Open(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fileScanner := bufio.NewScanner(filePath)
-	fileScanner.Split(bufio.ScanWords)
-	var fileLines []string
-	for fileScanner.Scan() {
-		fileLines = append(fileLines, fileScanner.Text())
-	}
+func init() {
+	rootCmd.Flags().BoolVarP(&flagSet.lines, "lines", "l", false, "Count number of lines")
+	rootCmd.Flags().BoolVarP(&flagSet.words, "words", "w", false, "Count number of words")
+	rootCmd.Flags().BoolVarP(&flagSet.chars, "chars", "c", false, "Count number of characters")
 
-	filePath.Close()
-	for _, line := range fileLines {
-		fmt.Println(line)
-		wordCount++
-	}
-}
-func printValues(lines, words *bool) string {
-	var output string
-	// append only if lineFlag is set
-	if *lines {
-		output += fmt.Sprintf("%8d", linesCount)
-	}
-
-	// append only if wordFlag is set
-	if *words {
-		output += fmt.Sprintf("%8d", wordCount)
-	}
-
-	if !*lines && !*words {
-		output += fmt.Sprintf("%8d", linesCount)
-		output += fmt.Sprintf("%8d", wordCount)
-	}
-	return output
 }
 
-func printToStdout(s string) {
-	fmt.Fprint(os.Stdout, s)
+var rootCmd = &cobra.Command{
+	Use:   "wc",
+	Short: "wc is a word,line and length count tool similiar to unix wc command ",
+	Long:  `wc is a word, line, and character count tool that reads from the standard input or from a file and outputs the number of lines, words, and characters`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			args = []string{"-"}
+		}
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+
+		if scanner.Err() != nil {
+			// Handle error.
+		}
+	},
+}
+
+func printToStderr(err error) {
+	fmt.Fprint(os.Stderr, err.Error())
 }
